@@ -1,0 +1,33 @@
+/* ETL Script for DIM_TIME */
+
+use CarSales_DB;
+
+-- Variables
+DECLARE @RowCount INT;
+DECLARE @RowCounter INT = 1;
+DECLARE @TIMEKEY NUMERIC;
+DECLARE @HOUR INT;
+DECLARE @TIMEFROM TIME;
+DECLARE @TIMETO TIME
+DECLARE @AMPM NVARCHAR(2);
+
+SELECT @RowCount = 24; 
+WHILE @RowCounter <= @RowCount
+
+BEGIN
+
+-- Transformation
+SELECT @TIMEKEY = @RowCounter, 
+	@HOUR = @RowCounter, 
+	@TIMEFROM = CAST( CAST(@HOUR-1 AS VARCHAR) + ':31' AS TIME),
+	@TIMETO	= CASE WHEN @HOUR = 24 THEN  CAST(CAST(0 AS VARCHAR) + ':30' AS TIME) 
+			ELSE  CAST(CAST(@HOUR AS VARCHAR) + ':30' AS TIME) END,
+	@AMPM = CASE WHEN @HOUR < 12 THEN 'AM' ELSE 'PM' END;
+
+-- Load into DW table
+USE CarSales_DW;
+
+INSERT INTO DIM_TIME VALUES (@TIMEKEY, @HOUR, @TIMEFROM, @TIMETO, @AMPM);
+SET @RowCounter += 1;  
+END
+/* End of ETL Script for DIM_TIME */

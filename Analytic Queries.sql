@@ -1,0 +1,31 @@
+USE CarSales_DW;
+
+/* What is the seasonal sales for the business by vehicle, by branch, and by country? */
+SELECT b.COUNTRY, b.BRANCHNAME, d.SEASON, CONCAT(c.MAKE, ' ', c.MODEL) AS VEHICLENAME, SUM(a.AMOUNT) AS TOTALREVENUE
+FROM FACT_SALES a,
+	DIM_BRANCH b,
+	DIM_VEHICLE c,
+	DIM_DATE d
+WHERE a.BRANCHID = b.BRANCHID AND a.VEHICLEID = c.VEHICLEID AND a.DATEKEY = d.DATEKEY AND a.STATUSID = 1
+GROUP BY
+	ROLLUP(b.COUNTRY, b.BRANCHNAME, d.SEASON, CONCAT(c.MAKE, ' ', c.MODEL));
+
+/* Who are our main customers, what are their demographic properties; (age groups, gender, country), what vehicles do they typically buy? */
+SELECT b.FULLNAME AS CUSTOMERNAME, b.AGEGROUP, b.COUNTRY, b.GENDER, CONCAT(c.MAKE, ' ', c.MODEL) AS VEHICLENAME, SUM(a.AMOUNT) AS TOTALREVENUE
+FROM FACT_SALES a,
+	 DIM_CUSTOMER b,
+	 DIM_VEHICLE c
+WHERE a.CUSTOMERID  = b.CUSTOMERID AND a.VEHICLEID = c.VEHICLEID AND a.STATUSID = 1  
+GROUP BY
+	ROLLUP(b.FULLNAME, b.AGEGROUP, b.COUNTRY, b.GENDER,  CONCAT(c.MAKE, ' ', c.MODEL));
+
+/* Which branches generate the most revenue, on what days and times are the highest sales generated and on which vehicles? */	
+SELECT a.BRANCHNAME, b.WEEKDAYNAME, d.TRANTIME, CONCAT(e.MAKE, ' ', e.MODEL) AS VEHICLENAME, SUM(d.AMOUNT) AS TOTALREVENUE
+FROM DIM_BRANCH a, 
+	 DIM_DATE b, 
+	 DIM_TIME c, 
+	 FACT_SALES d, 
+	 DIM_VEHICLE e
+WHERE b.DATEKEY = d.DATEKEY AND c.TIMEKEY = d.TIMEKEY AND a.BRANCHID = d.BRANCHID AND e.VEHICLEID = d.VEHICLEID AND d.STATUSID = 1
+GROUP BY 
+	ROLLUP(a.BRANCHNAME, b.WEEKDAYNAME, d.TRANTIME, CONCAT(e.MAKE, ' ', e.MODEL));
